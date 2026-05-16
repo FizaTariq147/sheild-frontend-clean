@@ -15,6 +15,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
 import Navbar from "../components/LegalTopBar";
 import BottomNavBar from "../components/BottomNavBar";
+import ChatConsultationScreen from "./ChatConsultationScreen";  
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -91,7 +92,7 @@ const LegalSupportScreen: React.FC<Props> = ({ navigation }) => {
       type: "Article",
       downloads: "900 downloads",
       tag: "Awareness",
-      fileUrl: "https://www.humanrightsinitiative.org/publications/police/fir.pdf",
+      fileUrl: "https://www.scribd.com/document/891561633/How-to-file-an-FIR",
     },
     {
       title: "Legal Aid Services Directory",
@@ -160,32 +161,12 @@ const LegalSupportScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const makeCall = (phoneNumber: string, serviceName?: string) => {
-    const url = `tel:${phoneNumber}`;
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (!supported) {
-          // CHANGED: Alert.alert to showAlert
-          showAlert(
-            "Error", 
-            "Calling is not supported on this device",
-            [{ text: "OK" }],
-            "error"
-          );
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch((err) => {
-        // CHANGED: Alert.alert to showAlert
-        showAlert(
-          "Error", 
-          err.message || "Failed to initiate call",
-          [{ text: "OK" }],
-          "error"
-        );
-      });
-  };
+ const makeCall = (phoneNumber: string, serviceName?: string) => {
+  navigation.navigate("InAppCallScreen", {
+    serviceName: serviceName || "Emergency Helpline",
+    phoneNumber,
+  });
+};
 
   const handleChatConsultation = () => {
     // CHANGED: console.log to showAlert
@@ -281,10 +262,10 @@ const LegalSupportScreen: React.FC<Props> = ({ navigation }) => {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
+                   <TouchableOpacity
               style={styles.cardWrap}
               activeOpacity={0.9}
-              onPress={handleChatConsultation}
+              onPress={() => navigation.navigate("ChatConsultationScreen")}
             >
               <LinearGradient
                 colors={["#f3f3ff", "#e6e2ff", "#9d1af2"]}

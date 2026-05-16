@@ -15,6 +15,8 @@ import OtpVerificationScreen from "../screens/OtpVerificationScreen";
 import ChatsScreen from "../screens/ChatsScreen";
 import ChatScreen from "../screens/ChatScreen";
 import SafetyTipsScreen from "../screens/SafetyTipsScreen";
+import ChatConsultationScreen from "../screens/ChatConsultationScreen";
+import InAppCallScreen from "../screens/InAppCallScreen";
 export type RootStackParamList = {
   Dashboard: undefined;
   SettingsScreen: undefined;
@@ -34,11 +36,21 @@ export type RootStackParamList = {
 ChatScreen: {
   contactId: string;
   contactName: string;
+  contactPhone: string;
   currentUserId?: string; 
   chatId?: string | null;
 };
 
   SafetyTipsScreen: undefined;
+ ChatConsultationScreen: undefined;
+InAppCallScreen: {
+  serviceName: string;
+  phoneNumber: string;
+  mode?: "outgoing" | "incoming";
+  callerId?: string;
+  receiverId?: string;
+  callType?: "audio" | "video";
+};
   // Location: undefined;
   // SOS: undefined;
 };
@@ -66,6 +78,12 @@ export default function AppNavigator() {
       <Stack.Screen name="ChatsScreen" component={ChatsScreen} />
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
       <Stack.Screen name="SafetyTipsScreen" component={SafetyTipsScreen} />
+      <Stack.Screen name="ChatConsultationScreen" component={ChatConsultationScreen} />
+      <Stack.Screen
+  name="InAppCallScreen"
+  component={InAppCallScreen}
+  options={{ headerShown: false, presentation: "fullScreenModal" }}
+/>
     </Stack.Navigator>
     </SafeAreaProvider>
   );

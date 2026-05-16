@@ -42,7 +42,7 @@ type Contact = {
   initials: string;
 };
 
-const API_BASE_URL = "http://192.168.100.12:5050";
+const API_BASE_URL = "https://fiza-tariq-shield-backend.hf.space";
 
 const ContactsScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -268,13 +268,13 @@ const ContactsScreen: React.FC<Props> = ({ navigation }) => {
 
   const getAvatarColor = (name: string) => {
     const colors = [
-      "#e9237f", // Your pink color
-      "#4285F4", // Blue
-      "#34A853", // Green
-      "#FBBC05", // Yellow
-      "#EA4335", // Red
-      "#7B1FA2", // Purple
-      "#00BCD4", // Cyan
+      "#FF9800", // Your pink color
+      "#FF9800", // Blue
+      "#FF9800", // Green
+      "#FF9800", // Yellow
+      "#FF9800", // Red
+      "#FF9800", // Purple
+      "#FF9800", // Cyan
       "#FF9800", // Orange
     ];
     const index = name.charCodeAt(0) % colors.length;

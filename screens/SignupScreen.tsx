@@ -111,7 +111,7 @@ export default function SignupScreen() {
     try {
       console.log("🔍 Signup attempt for:", email);
       
-      const res = await fetch("http://192.168.100.12:5050/api/users/register", {
+      const res = await fetch("https://fiza-tariq-shield-backend.hf.space/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

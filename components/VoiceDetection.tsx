@@ -4,7 +4,7 @@ import { Audio } from "expo-av";
 import * as Location from "expo-location";
 import axios from "axios";
 
-const API_URL = "http://192.168.0.100:8000/predict"; // replace with your backend IP
+const API_URL = "http://192.168.10.8/predict"; // replace with your backend IP
 
 export default function VoiceDetection() {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);

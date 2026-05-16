@@ -6,22 +6,19 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "node": "20.5.1"
+      "distribution": "internal"
     },
     "preview": {
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal",
-      "node": "20.5.1"
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "apk"
-      },
-      "node": "20.5.1"
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {

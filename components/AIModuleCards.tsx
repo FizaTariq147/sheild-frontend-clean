@@ -46,16 +46,67 @@ const DEFAULT_DATA: CardData[] = [
   },
 ];
 
+
 export default function AIModuleCards({
   data = DEFAULT_DATA,
   onPressCard,
+  voiceStatus,
+  motionStatus,
 }: {
   data?: CardData[];
   onPressCard?: (key: string) => void;
-}) {
+  voiceStatus?: "IDLE" | "LISTENING" | "SAFE" | "DISTRESS";
+  motionStatus?: "IDLE" | "ACTIVE" | "TRIGGERED";
+}) 
+{
+  const computedData = data.map((c) => {
+  if (c.key === "voice" && voiceStatus) {
+    let subtitle = "Tap to start detection";
+    let statusLabel = "Ready";
+
+    if (voiceStatus === "LISTENING") {
+      subtitle = "Listening...";
+      statusLabel = "Active";
+    } else if (voiceStatus === "SAFE") {
+      subtitle = "No distress detected";
+      statusLabel = "Safe";
+    } else if (voiceStatus === "DISTRESS") {
+      subtitle = "Distress detected!";
+      statusLabel = "ALERT";
+    }
+
+    return {
+      ...c,
+      subtitle,
+      statusLabel,
+    };
+  }
+
+
+
+if (c.key === "motion" && motionStatus) {
+  let subtitle = "Tap to start detection";
+  let statusLabel = "Ready";
+
+  if (motionStatus === "ACTIVE") {
+    subtitle = "Detecting shakes...";
+    statusLabel = "Active";
+  } else if (motionStatus === "TRIGGERED") {
+    subtitle = "Shake detected!";
+    statusLabel = "ALERT";
+  }
+
+  return {
+    ...c,
+    subtitle,
+    statusLabel,
+  };
+}
+  return c;
+});
   return (
     <View style={styles.row}>
-      {data.map((c) => (
+      {computedData.map((c) => (
         <TouchableOpacity
           key={c.key}
           style={styles.cardWrap}
@@ -102,7 +153,28 @@ export default function AIModuleCards({
             {c.statusLabel ? (
               <View style={styles.statusWrap}>
                 <View style={styles.statusPill}>
-                  <Text style={styles.statusText}>{c.statusLabel}</Text>
+              <Text
+  style={[
+    styles.statusText,
+    // Voice colors
+    c.key === "voice" && voiceStatus === "DISTRESS"
+      ? { color: "#dc2626" }
+      : c.key === "voice" && voiceStatus === "SAFE"
+      ? { color: "#16a34a" }
+
+      // Motion colors
+      : c.key === "motion" && motionStatus === "TRIGGERED"
+      ? { color: "#dc2626" }
+      : c.key === "motion" && motionStatus === "ACTIVE"
+      ? { color: "#6b46ff" }
+
+      // Default
+      : { color: "#e9237f" },
+  ]}
+>
+  {c.statusLabel}
+</Text>
+
                 </View>
               </View>
             ) : null}

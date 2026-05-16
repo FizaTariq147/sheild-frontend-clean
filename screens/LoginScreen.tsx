@@ -144,7 +144,7 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    const url = "http://192.168.100.12:5050/api/users/login";
+    const url = "https://fiza-tariq-shield-backend.hf.space/api/users/login";
 
     try {
       console.log("🔍 Login attempt for:", email);

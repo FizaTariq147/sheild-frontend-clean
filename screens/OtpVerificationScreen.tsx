@@ -33,7 +33,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
     buttons: [] as Array<{ text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive' }>,
   });
 
-  const BASE_URL = "http://192.168.100.12:5050/api/users";
+  const BASE_URL = "https://fiza-tariq-shield-backend.hf.space/api/users";
 
   useEffect(() => {
     Animated.timing(fadeAnim, {

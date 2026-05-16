@@ -54,7 +54,7 @@ export default function SafetyTipsCard({
   // === NETWORK CONFIG - adjust LAN_IP if testing on a physical device ===
 // === NETWORK CONFIG ===
 const LAN_IP: string = ""; // explicitly typed as string
-const candidateBases: string[] = ["http://192.168.100.12:5050"];
+const candidateBases: string[] = ["https://fiza-tariq-shield-backend.hf.space"];
 if (LAN_IP && LAN_IP.length > 0) candidateBases.push(`http://${LAN_IP.trim()}:5050`);
 
 

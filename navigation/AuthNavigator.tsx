@@ -20,6 +20,8 @@ import SOSScreen from "../screens/SOSScreen";
 import ChatsScreen from "../screens/ChatsScreen";
 import ChatScreen from "../screens/ChatScreen";
 import SafetyTipsScreen from "../screens/SafetyTipsScreen";
+import ChatConsultationScreen from "../screens/ChatConsultationScreen";
+import InAppCallScreen from "../screens/InAppCallScreen";
 export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
@@ -52,6 +54,15 @@ export type RootStackParamList = {
  chatId?: string; 
  };
   SafetyTipsScreen: undefined;
+  ChatConsultationScreen: { consultationId: string };
+InAppCallScreen: {
+  serviceName: string;
+  phoneNumber: string;
+  mode?: "outgoing" | "incoming";
+  callerId?: string;
+  receiverId?: string;
+  callType?: "audio" | "video";
+};
 };
 
 type AuthNavigatorProps = {
@@ -82,6 +93,12 @@ export default function AuthNavigator({ onLogin }: AuthNavigatorProps) {
                  <Stack.Screen name="ChatsScreen" component={ChatsScreen} />
                  <Stack.Screen name="ChatScreen" component={ChatScreen} />
                   <Stack.Screen name="SafetyTipsScreen" component={SafetyTipsScreen} />
+                    <Stack.Screen name="ChatConsultationScreen" component={ChatConsultationScreen} />
+                    <Stack.Screen
+  name="InAppCallScreen"
+  component={InAppCallScreen}
+  options={{ headerShown: false, presentation: "fullScreenModal" }}
+/>
     </Stack.Navigator>
   );
 }

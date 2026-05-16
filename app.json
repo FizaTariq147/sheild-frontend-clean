@@ -17,14 +17,39 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location",
+          "audio"
+        ],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access to monitor your safe zone and provide emergency services.",
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to show your position on the map and find nearby safe places.",
+        "NSLocationAlwaysUsageDescription": "This app needs background location to alert you when you leave your safe zone.",
+        "NSMicrophoneUsageDescription": "This app needs microphone access for audio features in emergency situations."
+      }
     },
     "android": {
       "package": "com.anonymous.sheildapp",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+    "android.permission.RECORD_AUDIO",
+    "android.permission.MODIFY_AUDIO_SETTINGS",
+    "android.permission.ACCESS_BACKGROUND_LOCATION",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.WAKE_LOCK",
+    "android.permission.SCHEDULE_EXACT_ALARM",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.READ_MEDIA_IMAGES",
+    "android.permission.READ_EXTERNAL_STORAGE"
+  ],
+      "foregroundService": {
+        "notificationTitle": "Safe Zone Monitoring",
+        "notificationBody": "Monitoring your distance from safe zone"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -32,7 +57,39 @@
     "plugins": [
       "expo-web-browser",
       "expo-audio",
-      "expo-asset"
+      "expo-asset",
+    [
+  "expo-image-picker",
+  {
+    "photosPermission": "Allow SHEILD to access your photos to set a profile picture.",
+    "androidPermission": true
+  }
+],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SHEILD to use your location to monitor your safe zone and provide emergency services.",
+          "locationAlwaysPermission": "Allow SHEILD to use your location in the background to alert you when you leave your safe zone.",
+          "locationWhenInUsePermission": "Allow SHEILD to use your location to show your position on the map and find nearby safe places."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ff007f",
+          "sounds": [
+            "./assets/sounds/click.mp3"
+          ]
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow SHEILD to access your microphone for audio features."
+        }
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {

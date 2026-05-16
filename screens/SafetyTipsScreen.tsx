@@ -122,7 +122,7 @@ export default function SafetyTipsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  // const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [selectedTips, setSelectedTips] = useState<number[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -148,9 +148,10 @@ export default function SafetyTipsScreen() {
       tip.sender.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = activeCategory === "all" || tip.category === activeCategory;
-    const matchesUnread = !showUnreadOnly || !tip.read;
+    // const matchesUnread = !showUnreadOnly || !tip.read;
     
-    return matchesSearch && matchesCategory && matchesUnread;
+    return matchesSearch && matchesCategory;
+
   });
 
   const handleTipPress = (tipId: number) => {
@@ -193,9 +194,9 @@ export default function SafetyTipsScreen() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "critical": return "#F44336";
-      case "high": return "#FF9800";
-      case "medium": return "#2196F3";
+      case "critical": return "#9d1af2";
+      case "high": return "#e9237fff";
+      case "medium": return "#9d1af2";
       default: return "#9E9E9E";
     }
   };
@@ -209,96 +210,93 @@ export default function SafetyTipsScreen() {
     }
   };
 
-  const renderTipItem = (tip: typeof ALL_TIPS[0]) => {
-    const isSelected = selectedTips.includes(tip.id);
-    
-    return (
-      <TouchableOpacity
-        key={tip.id}
+const renderTipItem = (tip: typeof ALL_TIPS[0]) => {
+  const isSelected = selectedTips.includes(tip.id);
+
+  return (
+    <TouchableOpacity
+      key={tip.id}
+      activeOpacity={0.85}
+      onPress={() => handleTipPress(tip.id)}
+      onLongPress={() => handleLongPress(tip.id)}
+      delayLongPress={500}
+      style={[
+        styles.tipCard,
+        isSelected && styles.tipCardSelected,
+        !tip.read && styles.tipCardUnread,
+      ]}
+    >
+      {/* Left vertical indicator */}
+      <View
         style={[
-          styles.tipItem,
-          isSelected && styles.tipItemSelected,
-          !tip.read && styles.tipItemUnread,
+          styles.tipIndicator,
+          { backgroundColor: getPriorityColor(tip.priority) },
         ]}
-        activeOpacity={0.7}
-        onPress={() => handleTipPress(tip.id)}
-        onLongPress={() => handleLongPress(tip.id)}
-        delayLongPress={500}
-      >
-        {isSelecting ? (
-          <View style={styles.checkbox}>
-            {isSelected ? (
-              <Ionicons name="checkmark-circle" size={22} color="#9d1af2" />
-            ) : (
-              <Ionicons name="ellipse-outline" size={22} color="#999" />
-            )}
-          </View>
-        ) : (
-          <View style={[
-            styles.senderIcon,
-            { backgroundColor: getPriorityColor(tip.priority) }
-          ]}>
-            <Text style={styles.senderIconText}>
-              {tip.sender.charAt(0).toUpperCase()}
+      />
+
+      {/* Main content */}
+      <View style={styles.tipBody}>
+        {/* Top row */}
+        <View style={styles.tipTopRow}>
+          <Text
+            style={[
+              styles.tipSender,
+              !tip.read && styles.tipSenderUnread,
+            ]}
+          >
+            {tip.sender}
+          </Text>
+
+          <Text style={styles.tipTime}>{tip.time}</Text>
+        </View>
+
+        {/* Subject */}
+        <Text
+          style={[
+            styles.tipSubject,
+            !tip.read && styles.tipSubjectUnread,
+          ]}
+          numberOfLines={1}
+        >
+          {tip.subject}
+        </Text>
+
+        {/* Preview */}
+        <Text style={styles.tipPreview} numberOfLines={2}>
+          {tip.preview}
+        </Text>
+
+        {/* Bottom row */}
+        <View style={styles.tipBottomRow}>
+          <View
+            style={[
+              styles.priorityPill,
+              { backgroundColor: getPriorityColor(tip.priority) + "20" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.priorityPillText,
+                { color: getPriorityColor(tip.priority) },
+              ]}
+            >
+              {getPriorityLabel(tip.priority)}
             </Text>
           </View>
-        )}
-        
-        <View style={styles.tipContent}>
-          <View style={styles.tipHeader}>
-            <View style={styles.senderContainer}>
-              <Text style={[styles.sender, !tip.read && styles.senderUnread]}>
-                {tip.sender}
-              </Text>
-              {tip.pinned && !isSelecting && (
-                <MaterialIcons name="bookmark" size={14} color="#e91e7a" style={styles.pinIcon} />
-              )}
-            </View>
-            <View style={styles.timeContainer}>
-              {!tip.read && (
-                <View style={styles.unreadDot} />
-              )}
-              <Text style={styles.time}>{tip.time}</Text>
-            </View>
-          </View>
-          
-          <Text style={[styles.subject, !tip.read && styles.subjectUnread]}>
-            {tip.subject}
-          </Text>
-          
-          <Text style={styles.preview} numberOfLines={2}>
-            {tip.preview}
-          </Text>
-          
-          <View style={styles.tipFooter}>
-            <View style={styles.footerLeft}>
-              <View style={[styles.priorityTag, { backgroundColor: getPriorityColor(tip.priority) + '20' }]}>
-                <Text style={[styles.priorityText, { color: getPriorityColor(tip.priority) }]}>
-                  {getPriorityLabel(tip.priority)}
-                </Text>
-              </View>
-              <View style={[styles.categoryTag, { backgroundColor: getCategoryColor(tip.category) + '20' }]}>
-                <Ionicons 
-                  name={CATEGORIES.find(c => c.id === tip.category)?.icon as any || "help-circle"} 
-                  size={12} 
-                  color={getCategoryColor(tip.category)} 
-                />
-                <Text style={[styles.categoryText, { color: getCategoryColor(tip.category) }]}>
-                  {getCategoryLabel(tip.category)}
-                </Text>
-              </View>
-            </View>
-            
-            {isSelecting ? null : (
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="ellipsis-horizontal" size={20} color="#999" />
-              </TouchableOpacity>
-            )}
-          </View>
+
+          {tip.pinned && (
+            <MaterialIcons
+              name="bookmark"
+              size={16}
+              color="#e91e7a"
+            />
+          )}
         </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 
   const getCategoryColor = (category: string) => {
     const cat = CATEGORIES.find(c => c.id === category);
@@ -389,29 +387,30 @@ export default function SafetyTipsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <LinearGradient
-            colors={["#ef6c97ff", "#e9237fff", "#9d1af2"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroGradient}
-          >
-            <View style={styles.heroContent}>
-              <View style={styles.heroIconContainer}>
-                <Ionicons name="shield-checkmark" size={32} color="#fff" />
-              </View>
-              <View style={styles.heroTextContainer}>
-                <Text style={styles.heroTitle}>Your Safety Inbox</Text>
-                <Text style={styles.heroSubtitle}>
-                  Important safety advice and alerts
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.composeButton}>
-                <Feather name="plus" size={20} color="#9d1af2" />
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
+<View style={styles.heroSection}>
+  <LinearGradient
+    colors={["#ef6c97ff", "#e9237fff", "#9d1af2"]}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.heroGradient}
+  >
+    <View style={styles.heroOverlay} />
+
+    <View style={styles.heroContent}>
+      <View style={styles.heroIconContainer}>
+        <Ionicons name="shield-checkmark" size={26} color="#fff" />
+      </View>
+
+      <View style={styles.heroTextContainer}>
+        <Text style={styles.heroTitle}>Safety Tips</Text>
+        <Text style={styles.heroSubtitle}>
+          Trusted guidance for everyday protection
+        </Text>
+      </View>
+    </View>
+  </LinearGradient>
+</View>
+
 
         {/* Search Bar with ALWAYS VISIBLE LinearGradient Border */}
         <View style={styles.searchWrapper}>
@@ -495,7 +494,7 @@ export default function SafetyTipsScreen() {
             ))}
           </ScrollView>
           
-          <View style={styles.filterToggle}>
+          {/* <View style={styles.filterToggle}>
             <Ionicons name="eye-outline" size={16} color="#666" />
             <Text style={styles.filterToggleText}>Unread only</Text>
             <Switch
@@ -506,7 +505,7 @@ export default function SafetyTipsScreen() {
               ios_backgroundColor="#e0e0e0"
               style={styles.switch}
             />
-          </View>
+          </View> */}
         </View>
 
         {/* Selection Bar */}
@@ -534,7 +533,7 @@ export default function SafetyTipsScreen() {
                   <MaterialIcons name="bookmark" size={20} color="#21303A" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.selectionAction}>
-                  <Feather name="trash-2" size={20} color="#F44336" />
+                  <Feather name="trash-2" size={20} color="#208792ff" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -567,30 +566,12 @@ export default function SafetyTipsScreen() {
         ) : (
           <>
             {/* Today Section */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today</Text>
-              <TouchableOpacity>
-                <Text style={styles.sectionAction}>See all</Text>
-              </TouchableOpacity>
-            </View>
             {filteredTips.filter(tip => tip.time.includes("PM") || tip.time.includes("AM")).map(renderTipItem)}
             
             {/* Yesterday Section */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Yesterday</Text>
-              <TouchableOpacity>
-                <Text style={styles.sectionAction}>See all</Text>
-              </TouchableOpacity>
-            </View>
             {filteredTips.filter(tip => tip.time === "Yesterday").map(renderTipItem)}
             
             {/* This Week Section */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>This Week</Text>
-              <TouchableOpacity>
-                <Text style={styles.sectionAction}>See all</Text>
-              </TouchableOpacity>
-            </View>
             {filteredTips.filter(tip => tip.time.includes("Apr") && 
               !tip.time.includes("Yesterday") && 
               !(tip.time.includes("PM") || tip.time.includes("AM"))).map(renderTipItem)}
@@ -601,7 +582,7 @@ export default function SafetyTipsScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
         onPress={() => {
@@ -611,7 +592,7 @@ export default function SafetyTipsScreen() {
         <View style={styles.fabContent}>
           <Ionicons name="add" size={24} color="#fff" />
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </SafeAreaView>
   );
 }
@@ -625,7 +606,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-        marginTop: 30,
+  
     paddingTop: Platform.OS === "ios" ? 0 : StatusBar.currentHeight,
   },
   headerContent: {
@@ -675,41 +656,47 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   heroSection: {
-    marginBottom: 16,
-  },
-  heroGradient: {
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    paddingTop: Platform.OS === "ios" ? 60 : 20,
-    paddingBottom: 24,
-    paddingHorizontal: 20,
-  },
-  heroContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  heroIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-  },
-  heroTextContainer: {
-    flex: 1,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#fff",
-    marginBottom: 4,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.9)",
-  },
+  marginBottom: 24,
+},
+
+heroGradient: {
+  borderRadius: 28,
+  padding: 24,
+  overflow: "hidden",
+},
+
+heroOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(255,255,255,0.08)",
+},
+
+heroContent: {
+  flexDirection: "row",
+  alignItems: "center",
+},
+
+heroIconContainer: {
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  backgroundColor: "rgba(255,255,255,0.22)",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 6,
+},
+
+heroTitle: {
+  fontSize: 22,
+  fontWeight: "800",
+  color: "#fff",
+},
+
+heroSubtitle: {
+  fontSize: 12,
+  color: "rgba(255,255,255,0.85)",
+  marginTop: 4,
+},
+
   composeButton: {
     width: 44,
     height: 44,
@@ -784,6 +771,95 @@ backgroundColor: "#F9FAFB",
   filterTextActive: {
     color: "#fff",
   },
+  tipCard: {
+  flexDirection: "row",
+  backgroundColor: "#fff",
+  borderRadius: 14,
+  marginHorizontal: 20,
+  marginBottom: 12,
+  overflow: "hidden",
+  borderWidth: 1,
+  borderColor: "#f0f0f0",
+},
+
+tipCardUnread: {
+  backgroundColor: "#f8fbff",
+},
+
+tipCardSelected: {
+  borderColor: "#9d1af2",
+  borderWidth: 2,
+},
+
+tipIndicator: {
+  width: 4,
+},
+
+tipBody: {
+  flex: 1,
+  padding: 16,
+},
+
+tipTopRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 4,
+},
+
+tipSender: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#666",
+},
+
+tipSenderUnread: {
+  color: "#21303A",
+  fontWeight: "700",
+},
+
+tipTime: {
+  fontSize: 12,
+  color: "#999",
+},
+
+tipSubject: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#21303A",
+  marginTop: 2,
+},
+
+tipSubjectUnread: {
+  fontWeight: "700",
+},
+
+tipPreview: {
+  fontSize: 14,
+  color: "#666",
+  marginTop: 6,
+  lineHeight: 20,
+},
+
+tipBottomRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginTop: 10,
+},
+
+priorityPill: {
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 10,
+},
+
+priorityPillText: {
+  fontSize: 11,
+  fontWeight: "700",
+  textTransform: "uppercase",
+},
+
   countBadge: {
     backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 10,
@@ -803,22 +879,22 @@ backgroundColor: "#F9FAFB",
   countTextActive: {
     color: "#fff",
   },
-  filterToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    paddingHorizontal: 20,
-  },
-  filterToggleText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 8,
-    marginRight: 12,
-    flex: 1,
-  },
-  switch: {
-    transform: Platform.OS === "ios" ? [{ scaleX: 0.8 }, { scaleY: 0.8 }] : [],
-  },
+  // filterToggle: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   marginTop: 12,
+  //   paddingHorizontal: 20,
+  // },
+  // filterToggleText: {
+  //   fontSize: 14,
+  //   color: "#666",
+  //   marginLeft: 8,
+  //   marginRight: 12,
+  //   flex: 1,
+  // },
+  // switch: {
+  //   transform: Platform.OS === "ios" ? [{ scaleX: 0.8 }, { scaleY: 0.8 }] : [],
+  // },
   selectionBar: {
     backgroundColor: "#fff",
     borderBottomWidth: 1,
@@ -865,11 +941,11 @@ backgroundColor: "#F9FAFB",
     fontWeight: "700",
     color: "#21303A",
   },
-  sectionAction: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#9d1af2",
-  },
+  // sectionAction: {
+  //   fontSize: 14,
+  //   fontWeight: "600",
+  //   color: "#9d1af2",
+  // },
   tipItem: {
     flexDirection: "row",
     backgroundColor: "#fff",

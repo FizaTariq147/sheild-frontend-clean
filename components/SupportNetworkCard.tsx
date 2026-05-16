@@ -12,6 +12,11 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
+
+type NavProp = StackNavigationProp<RootStackParamList>;
 
 type Contact = {
   id: string;
@@ -32,31 +37,24 @@ const VISIBLE_LIMIT = 5;
 export default function SupportNetworkCard({
   contacts = DEFAULT_CONTACTS,
   onManage,
-  apiBase = "http://192.168.100.12:5050",
+  apiBase = "https://fiza-tariq-shield-backend.hf.space",
 }: {
   contacts?: Contact[];
   onManage?: () => void;
   apiBase?: string;
 }) {
+  const navigation = useNavigation<NavProp>();
   const [userContacts, setUserContacts] = useState<Contact[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const callNumber = async (phone: string) => {
-    try {
-      const tel = `tel:${phone}`;
-      const supported = await Linking.canOpenURL(tel);
-      if (!supported) {
-        Alert.alert("Call not supported", `Your device cannot call ${phone}`);
-        return;
-      }
-      await Linking.openURL(tel);
-    } catch (err) {
-      console.warn("Call error", err);
-      Alert.alert("Error", "Unable to start call");
-    }
-  };
+const callNumber = (phone: string, name: string) => {
+  navigation.navigate("InAppCallScreen", {
+    serviceName: name,
+    phoneNumber: phone,
+  });
+};
 
   // fetch saved contacts for the logged-in user
   useEffect(() => {
@@ -188,7 +186,7 @@ export default function SupportNetworkCard({
 
               <TouchableOpacity
                 style={styles.callButton}
-                onPress={() => callNumber(c.number)}
+                onPress={() => callNumber(c.number, c.label)}
                 activeOpacity={0.85}
               >
                 <Text style={styles.callText}>Call</Text>
