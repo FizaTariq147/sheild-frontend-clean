@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "1045773931383",
+    "project_id": "sheildapp-2b517",
+    "storage_bucket": "sheildapp-2b517.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045773931383:android:75d89ba2f362a996694772",
+        "android_client_info": {
+          "package_name": "com.anonymous.sheildapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1045773931383-2v16ibe3dt2ioujnhntst26vf43nrq8n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRkyvI--1VSwavw7dzSnkmN_oYpntCd1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1045773931383-2v16ibe3dt2ioujnhntst26vf43nrq8n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045773931383:android:f42b4c80fa0bef0a694772",
+        "android_client_info": {
+          "package_name": "com.sheildapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1045773931383-2v16ibe3dt2ioujnhntst26vf43nrq8n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRkyvI--1VSwavw7dzSnkmN_oYpntCd1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1045773931383-2v16ibe3dt2ioujnhntst26vf43nrq8n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
