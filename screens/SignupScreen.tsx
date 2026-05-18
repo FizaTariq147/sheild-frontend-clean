@@ -20,6 +20,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeAlert } from "../components/ThemeAlert";
 
+const BASE_URL = "https://fiza-tariq-shield-backend.hf.space";
+
 export default function SignupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Signup">>();
 
@@ -29,6 +31,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
 
   // Alert state
   const [alertVisible, setAlertVisible] = useState(false);
@@ -60,6 +63,21 @@ export default function SignupScreen() {
     });
     setAlertVisible(true);
   };
+
+  // Wake up the server as soon as screen loads
+  useEffect(() => {
+    const wakeServer = async () => {
+      try {
+        setServerWaking(true);
+        await fetch(`${BASE_URL}/health`, { method: "GET" });
+      } catch {
+        // Ignore errors — just a wake-up ping
+      } finally {
+        setServerWaking(false);
+      }
+    };
+    wakeServer();
+  }, []);
 
   useEffect(() => {
     // Entrance animations
@@ -108,10 +126,15 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
+
+    // Set up 60 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       console.log("🔍 Signup attempt for:", email);
-      
-      const res = await fetch("https://fiza-tariq-shield-backend.hf.space/api/users/register", {
+
+      const res = await fetch(`${BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,12 +143,15 @@ export default function SignupScreen() {
           phone: phoneNo,
           password,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const text = await res.text();
       console.log("🔍 Signup response status:", res.status);
       console.log("🔍 Signup response:", text);
-      
+
       let data: any = {};
       try {
         data = JSON.parse(text);
@@ -139,9 +165,8 @@ export default function SignupScreen() {
       if (res.ok || res.status === 201) {
         const pendingId = data.pendingId || data.pending_id || null;
 
-        // ✅ DO NOT STORE PASSWORD - Just navigate to OTP screen
         console.log("✅ Registration successful, navigating to OTP");
-        
+
         showAlert(
           "Success",
           "OTP sent to your email. Please verify to continue.",
@@ -165,8 +190,19 @@ export default function SignupScreen() {
         showAlert("Error", String(err), [{ text: "OK" }], "error");
       }
     } catch (error: any) {
+      clearTimeout(timeoutId);
       console.error("Signup error:", error);
-      showAlert("Error", error.message || "Something went wrong", [{ text: "OK" }], "error");
+
+      if (error.name === 'AbortError') {
+        showAlert(
+          "Connection Timeout",
+          "The server is taking too long to respond. Please wait a moment and try again.",
+          [{ text: "OK" }],
+          "error"
+        );
+      } else {
+        showAlert("Error", error.message || "Something went wrong", [{ text: "OK" }], "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -219,6 +255,14 @@ export default function SignupScreen() {
               <Text style={styles.subtitle}>
                 Create your SHEILD account
               </Text>
+
+              {/* Server waking up notice */}
+              {serverWaking && (
+                <View style={styles.wakingBanner}>
+                  <ActivityIndicator size="small" color="#e9237f" />
+                  <Text style={styles.wakingText}>  Connecting to server...</Text>
+                </View>
+              )}
 
               {/* Form Card */}
               <Animated.View
@@ -321,13 +365,16 @@ export default function SignupScreen() {
 
                 {/* Sign Up Button */}
                 <TouchableOpacity
-                  style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
+                  style={[styles.signUpButton, (loading || serverWaking) && styles.signUpButtonDisabled]}
                   onPress={handleSignup}
-                  disabled={loading}
+                  disabled={loading || serverWaking}
                   activeOpacity={0.8}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <View style={styles.loadingRow}>
+                      <ActivityIndicator color="#fff" />
+                      <Text style={styles.loadingText}>  Please wait...</Text>
+                    </View>
                   ) : (
                     <Text style={styles.signUpButtonText}>Sign Up</Text>
                   )}
@@ -359,7 +406,6 @@ export default function SignupScreen() {
   );
 }
 
-// Styles remain exactly the same
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
@@ -378,6 +424,29 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center" as const,
     zIndex: 10,
+  },
+  wakingBanner: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    backgroundColor: "#fff3f8",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#e9237f33",
+  },
+  wakingText: {
+    color: "#e9237f",
+    fontSize: 13,
+  },
+  loadingRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 14,
   },
   // Decorative circles
   circle1: {

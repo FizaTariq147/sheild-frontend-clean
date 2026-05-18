@@ -657,11 +657,10 @@ const styles = StyleSheet.create({
   },
   heroSection: {
   marginBottom: 24,
-},
-
-heroGradient: {
-  borderRadius: 28,
-  padding: 24,
+  },
+  heroGradient: {
+    borderRadius: 28,
+    padding: 24,
   overflow: "hidden",
 },
 
