@@ -99,7 +99,7 @@ const LegalSupportScreen: React.FC<Props> = ({ navigation }) => {
       type: "Document",
       downloads: "700 downloads",
       tag: "Support",
-      fileUrl: "https://acf.gov/sites/default/files/documents/orr/english_legal_service_providers_guide_with_form_508.pdf",
+      fileUrl: "https://www.las.org.pk/media/pdfs/content/Directory-of-Support-Services-for-Women-and-Girls-Experiencing-Violence-and_FHAfycl.pdf",
     },
   ];
 
