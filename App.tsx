@@ -18,6 +18,8 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
+     fetch("https://fiza-tariq-shield-backend.hf.space/health").catch(() => {});
+     
     const checkLoginStatus = async () => {
       const token = await AsyncStorage.getItem("accessToken");
       setIsLoggedIn(!!token);

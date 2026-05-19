@@ -49,13 +49,12 @@ const QUICK_PROMPTS = [
 
 
 // ─── Groq API (Free, no credit card) ─────────────────────────────────────────
-const GROQ_API_KEY = "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"; 
 
 
 // List of currently working free models on Groq
 const GROQ_MODELS = [
   "llama-3.1-8b-instant",    // Fast, good for legal
-  "llama-3.1-70b-versatile", // Higher quality
+  "llama3-70b-8192", // Higher quality
   "gemma2-9b-it",            // Google's model
 ];
 
@@ -67,7 +66,8 @@ async function fetchAIResponse(
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${GROQ_API_KEY}`,
+    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

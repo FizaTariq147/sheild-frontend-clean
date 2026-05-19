@@ -31,7 +31,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [serverWaking, setServerWaking] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
 
   // Alert state
   const [alertVisible, setAlertVisible] = useState(false);
@@ -48,7 +48,6 @@ export default function SignupScreen() {
   const logoScale = useRef(new Animated.Value(0)).current;
   const logoRotate = useRef(new Animated.Value(0)).current;
 
-  // Show alert function
   const showAlert = (
     title: string,
     message: string,
@@ -64,23 +63,9 @@ export default function SignupScreen() {
     setAlertVisible(true);
   };
 
-  // Wake up the server as soon as screen loads
-  useEffect(() => {
-    const wakeServer = async () => {
-      try {
-        setServerWaking(true);
-        await fetch(`${BASE_URL}/health`, { method: "GET" });
-      } catch {
-        // Ignore errors — just a wake-up ping
-      } finally {
-        setServerWaking(false);
-      }
-    };
-    wakeServer();
-  }, []);
+  // REMOVED: wakeServer useEffect — moved to App.tsx
 
   useEffect(() => {
-    // Entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -100,7 +85,6 @@ export default function SignupScreen() {
       }),
     ]).start();
 
-    // Continuous logo rotation
     Animated.loop(
       Animated.timing(logoRotate, {
         toValue: 1,
@@ -115,25 +99,11 @@ export default function SignupScreen() {
     outputRange: ["0deg", "360deg"],
   });
 
-  const handleSignup = async () => {
-    if (!name || !email || !phoneNo || !password || !confirmPassword) {
-      showAlert("Error", "Please fill in all fields", [{ text: "OK" }], "error");
-      return;
-    }
-    if (password !== confirmPassword) {
-      showAlert("Error", "Passwords do not match", [{ text: "OK" }], "error");
-      return;
-    }
-
-    setLoading(true);
-
-    // Set up 60 second timeout
+  // Attempts the register request, retries once on timeout (HF Space cold start)
+  const attemptRegister = async (attempt: number): Promise<Response> => {
     const controller = new AbortController();
-   const timeoutId = setTimeout(() => controller.abort(), 120000);
-
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 2.5 min per attempt
     try {
-      console.log("🔍 Signup attempt for:", email);
-
       const res = await fetch(`${BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,8 +115,37 @@ export default function SignupScreen() {
         }),
         signal: controller.signal,
       });
-
       clearTimeout(timeoutId);
+      setStatusMsg("");
+      return res;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError" && attempt < 2) {
+        console.log(`⏳ Attempt ${attempt} timed out, retrying...`);
+        setStatusMsg("Server is waking up, retrying...");
+        return attemptRegister(attempt + 1);
+      }
+      throw err;
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!name || !email || !phoneNo || !password || !confirmPassword) {
+      showAlert("Error", "Please fill in all fields", [{ text: "OK" }], "error");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showAlert("Error", "Passwords do not match", [{ text: "OK" }], "error");
+      return;
+    }
+
+    setLoading(true);
+    setStatusMsg("Creating your account...");
+
+    try {
+      console.log("🔍 Signup attempt for:", email);
+
+      const res = await attemptRegister(1);
 
       const text = await res.text();
       console.log("🔍 Signup response status:", res.status);
@@ -158,13 +157,11 @@ export default function SignupScreen() {
       } catch {
         console.warn("Signup response is not JSON:", text);
         showAlert("Error", "Server returned unexpected response", [{ text: "OK" }], "error");
-        setLoading(false);
         return;
       }
 
       if (res.ok || res.status === 201) {
         const pendingId = data.pendingId || data.pending_id || null;
-
         console.log("✅ Registration successful, navigating to OTP");
 
         showAlert(
@@ -179,8 +176,8 @@ export default function SignupScreen() {
                   email,
                   phone: phoneNo,
                 });
-              }
-            }
+              },
+            },
           ],
           "success"
         );
@@ -190,13 +187,12 @@ export default function SignupScreen() {
         showAlert("Error", String(err), [{ text: "OK" }], "error");
       }
     } catch (error: any) {
-      clearTimeout(timeoutId);
       console.error("Signup error:", error);
 
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         showAlert(
           "Connection Timeout",
-          "The server is taking too long to respond. Please wait a moment and try again.",
+          "Server is still starting up. Please wait 30 seconds and try again.",
           [{ text: "OK" }],
           "error"
         );
@@ -205,6 +201,7 @@ export default function SignupScreen() {
       }
     } finally {
       setLoading(false);
+      setStatusMsg("");
     }
   };
 
@@ -219,26 +216,16 @@ export default function SignupScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
-            {/* Decorative circles */}
             <View style={styles.circle1} />
             <View style={styles.circle2} />
             <View style={styles.circle3} />
 
-            <Animated.View
-              style={[
-                styles.content,
-                {
-                  opacity: fadeAnim,
-                },
-              ]}
-            >
+            <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
               {/* Logo Section */}
               <Animated.View
                 style={[
                   styles.logoContainer,
-                  {
-                    transform: [{ scale: logoScale }, { rotate: spin }],
-                  },
+                  { transform: [{ scale: logoScale }, { rotate: spin }] },
                 ]}
               >
                 <View style={styles.logoCircle}>
@@ -250,37 +237,16 @@ export default function SignupScreen() {
                 </View>
               </Animated.View>
 
-              {/* Title */}
               <Text style={styles.title}>Sign Up</Text>
-              <Text style={styles.subtitle}>
-                Create your SHEILD account
-              </Text>
+              <Text style={styles.subtitle}>Create your SHEILD account</Text>
 
-              {/* Server waking up notice */}
-              {serverWaking && (
-                <View style={styles.wakingBanner}>
-                  <ActivityIndicator size="small" color="#e9237f" />
-                  <Text style={styles.wakingText}>  Connecting to server...</Text>
-                </View>
-              )}
+              {/* REMOVED: serverWaking banner — no longer needed here */}
 
-              {/* Form Card */}
               <Animated.View
-                style={[
-                  styles.formCard,
-                  {
-                    transform: [{ translateY: slideAnim }],
-                  },
-                ]}
+                style={[styles.formCard, { transform: [{ translateY: slideAnim }] }]}
               >
-                {/* Full Name Input */}
                 <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color="#e9237f"
-                    style={styles.inputIcon}
-                  />
+                  <Ionicons name="person-outline" size={20} color="#e9237f" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Full Name"
                     placeholderTextColor="#999"
@@ -290,14 +256,8 @@ export default function SignupScreen() {
                   />
                 </View>
 
-                {/* Email Input */}
                 <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color="#e9237f"
-                    style={styles.inputIcon}
-                  />
+                  <Ionicons name="mail-outline" size={20} color="#e9237f" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Email"
                     placeholderTextColor="#999"
@@ -309,14 +269,8 @@ export default function SignupScreen() {
                   />
                 </View>
 
-                {/* Phone Input */}
                 <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="call-outline"
-                    size={20}
-                    color="#e9237f"
-                    style={styles.inputIcon}
-                  />
+                  <Ionicons name="call-outline" size={20} color="#e9237f" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Phone Number"
                     placeholderTextColor="#999"
@@ -327,14 +281,8 @@ export default function SignupScreen() {
                   />
                 </View>
 
-                {/* Password Input */}
                 <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color="#e9237f"
-                    style={styles.inputIcon}
-                  />
+                  <Ionicons name="lock-closed-outline" size={20} color="#e9237f" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Password"
                     placeholderTextColor="#999"
@@ -345,14 +293,8 @@ export default function SignupScreen() {
                   />
                 </View>
 
-                {/* Confirm Password Input */}
                 <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color="#e9237f"
-                    style={styles.inputIcon}
-                  />
+                  <Ionicons name="lock-closed-outline" size={20} color="#e9237f" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Confirm Password"
                     placeholderTextColor="#999"
@@ -363,24 +305,23 @@ export default function SignupScreen() {
                   />
                 </View>
 
-                {/* Sign Up Button */}
+                {/* CHANGED: disabled only on loading, not serverWaking */}
                 <TouchableOpacity
-                  style={[styles.signUpButton, (loading || serverWaking) && styles.signUpButtonDisabled]}
+                  style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
                   onPress={handleSignup}
-                  disabled={loading || serverWaking}
+                  disabled={loading}
                   activeOpacity={0.8}
                 >
                   {loading ? (
                     <View style={styles.loadingRow}>
                       <ActivityIndicator color="#fff" />
-                      <Text style={styles.loadingText}>  Please wait...</Text>
+                      <Text style={styles.loadingText}>  {statusMsg || "Please wait..."}</Text>
                     </View>
                   ) : (
                     <Text style={styles.signUpButtonText}>Sign Up</Text>
                   )}
                 </TouchableOpacity>
 
-                {/* Login Link */}
                 <View style={styles.loginContainer}>
                   <Text style={styles.loginPrompt}>Already have an account? </Text>
                   <TouchableOpacity onPress={() => navigation.navigate("Login")}>
@@ -393,7 +334,6 @@ export default function SignupScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Theme Alert Component */}
       <ThemeAlert
         visible={alertVisible}
         title={alertConfig.title}
@@ -407,12 +347,8 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-  },
+  keyboardView: { flex: 1 },
+  scrollContainer: { flexGrow: 1 },
   container: {
     flex: 1,
     minHeight: "100%",
@@ -421,34 +357,9 @@ const styles = StyleSheet.create({
     justifyContent: "center" as const,
     overflow: "hidden" as const,
   },
-  content: {
-    alignItems: "center" as const,
-    zIndex: 10,
-  },
-  wakingBanner: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    backgroundColor: "#fff3f8",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#e9237f33",
-  },
-  wakingText: {
-    color: "#e9237f",
-    fontSize: 13,
-  },
-  loadingRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-  },
-  loadingText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  // Decorative circles
+  content: { alignItems: "center" as const, zIndex: 10 },
+  loadingRow: { flexDirection: "row" as const, alignItems: "center" as const },
+  loadingText: { color: "#fff", fontSize: 14 },
   circle1: {
     position: "absolute" as const,
     width: 200,
@@ -476,10 +387,7 @@ const styles = StyleSheet.create({
     top: "50%",
     right: -20,
   },
-  logoContainer: {
-    marginBottom: 2,
-    marginTop: 20,
-  },
+  logoContainer: { marginBottom: 2, marginTop: 20 },
   logoCircle: {
     width: 80,
     height: 80,
@@ -495,10 +403,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
-  logo: {
-    width: 70,
-    height: 70,
-  },
+  logo: { width: 70, height: 70 },
   title: {
     fontSize: 32,
     fontWeight: "bold" as const,
@@ -534,14 +439,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 40,
   },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, fontSize: 16, color: "#333" },
   signUpButton: {
     borderRadius: 12,
     overflow: "hidden" as const,
@@ -557,9 +456,7 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  signUpButtonDisabled: {
-    opacity: 0.6,
-  },
+  signUpButtonDisabled: { opacity: 0.6 },
   signUpButtonText: {
     color: "#fff",
     fontSize: 16,
@@ -571,13 +468,6 @@ const styles = StyleSheet.create({
     justifyContent: "center" as const,
     alignItems: "center" as const,
   },
-  loginPrompt: {
-    color: "#666",
-    fontSize: 14,
-  },
-  loginText: {
-    color: "#3D246C",
-    fontSize: 14,
-    fontWeight: "bold" as const,
-  },
+  loginPrompt: { color: "#666", fontSize: 14 },
+  loginText: { color: "#3D246C", fontSize: 14, fontWeight: "bold" as const },
 });
