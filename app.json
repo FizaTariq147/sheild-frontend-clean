@@ -31,7 +31,10 @@
     },
     "android": {
       "package": "com.anonymous.sheildapp",
+      "usesCleartextTraffic": true,
       "permissions": [
+        "android.permission.INTERNET", 
+        "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
@@ -70,7 +73,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow SHEILD to use your location to monitor your safe zone and provide emergency services.",
           "locationAlwaysPermission": "Allow SHEILD to use your location in the background to alert you when you leave your safe zone.",
-          "locationWhenInUsePermission": "Allow SHEILD to use your location to show your position on the map and find nearby safe places."
+          "locationWhenInUsePermission": "Allow SHEILD to use your location to show your position on the map and find nearby safe places.",
+           "isAndroidBackgroundLocationEnabled": true,
+    "isAndroidForegroundServiceEnabled": true
         }
       ],
       [
