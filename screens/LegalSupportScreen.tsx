@@ -119,47 +119,48 @@ const LegalSupportScreen: React.FC<Props> = ({ navigation }) => {
     setAlertVisible(true);
   };
 
-  const handleDownload = async (url: string, title: string) => {
-    try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        // CHANGED: Alert.alert to showAlert
-        showAlert(
-          "Permission Required", 
-          "Please allow storage access to download the file.",
-          [{ text: "OK" }],
-          "warning"
-        );
-        return;
-      }
-
-      // Use legacy API
-      const fileUri = FileSystem.cacheDirectory + `${title.replace(/[^\w\s-]/g, "").trim() || "LegalDocument"}.pdf`;
-
-      const { uri } = await FileSystem.downloadAsync(url, fileUri);
-
-      // Save to device Downloads or Media folder
-      const asset = await MediaLibrary.createAssetAsync(uri);
-      await MediaLibrary.createAlbumAsync("Downloads", asset, false);
-
-      // CHANGED: Alert.alert to showAlert
-      showAlert(
-        "Download Complete", 
-        "PDF has been saved to your Downloads folder.",
-        [{ text: "OK" }],
-        "success"
-      );
-    } catch (error) {
-      console.error("Download Error:", error);
-      // CHANGED: Alert.alert to showAlert
-      showAlert(
-        "Error", 
-        "Failed to download PDF. Please try again.",
-        [{ text: "OK" }],
-        "error"
-      );
+ const handleDownload = async (url: string, title: string) => {
+  try {
+    // Request permission
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      showAlert("Permission Required", "Please allow storage access.", [{ text: "OK" }], "warning");
+      return;
     }
-  };
+
+    showAlert("Downloading...", "Please wait while the file downloads.", [{ text: "OK" }], "info");
+
+    const filename = `${title.replace(/[^\w\s-]/g, "").trim() || "LegalDocument"}.pdf`;
+    // ✅ Use cacheDirectory (works in APK)
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri);
+
+    if (downloadResult.status !== 200) {
+      showAlert("Error", "Failed to download file.", [{ text: "OK" }], "error");
+      return;
+    }
+
+    // ✅ Save to media library
+    const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+    await MediaLibrary.createAlbumAsync("Downloads", asset, false);
+
+    showAlert("Success", "File saved to Downloads folder.", [{ text: "OK" }], "success");
+
+  } catch (error: any) {
+    console.error("Download Error:", error);
+    // ✅ Fallback: open in browser if download fails
+    showAlert(
+      "Download Failed",
+      "Would you like to open the file in your browser instead?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Open in Browser", onPress: () => Linking.openURL(url) }
+      ],
+      "warning"
+    );
+  }
+};
 
  const makeCall = (phoneNumber: string, serviceName?: string) => {
   navigation.navigate("InAppCallScreen", {

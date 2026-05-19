@@ -837,24 +837,36 @@ export default function SafeSpacesScreen({ navigation }: Props) {
 
   // ── Geofencing ────────────────────────────────────────────────────────────
   const setupGeofencing = async (latitude: number, longitude: number) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY_SAFE_ZONE_LOCATION, JSON.stringify({ latitude, longitude }));
-      await safeSetupNotificationCategory();
-      await Location.startLocationUpdatesAsync(GEOFENCING_TASK, {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 30_000,
-        distanceInterval: 100,
-        foregroundService: {
-          notificationTitle: "Safe Zone Monitoring",
-          notificationBody: "Monitoring your distance from safe zone",
-          notificationColor: "#ff007f",
-        },
-      });
-      await loadAlarmSound();
-    } catch (e) {
-      console.warn("Failed to setup geofencing:", e);
+  try {
+    // ✅ Check background permission before starting
+    const { status } = await Location.getBackgroundPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        "Permission Required",
+        "Background location permission is needed for safe zone monitoring. Please enable it in Settings.",
+        [{ text: "OK" }],
+        "warning"
+      );
+      return;
     }
-  };
+
+    await AsyncStorage.setItem(STORAGE_KEY_SAFE_ZONE_LOCATION, JSON.stringify({ latitude, longitude }));
+    await safeSetupNotificationCategory();
+    await Location.startLocationUpdatesAsync(GEOFENCING_TASK, {
+      accuracy: Location.Accuracy.Balanced,
+      timeInterval: 30_000,
+      distanceInterval: 100,
+      foregroundService: {
+        notificationTitle: "Safe Zone Monitoring",
+        notificationBody: "Monitoring your distance from safe zone",
+        notificationColor: "#ff007f",
+      },
+    });
+    await loadAlarmSound();
+  } catch (e) {
+    console.warn("Failed to setup geofencing:", e);
+  }
+};
 
   const setCurrentAsSafeZone = async () => {
     if (!currentLocation) {
@@ -959,11 +971,17 @@ export default function SafeSpacesScreen({ navigation }: Props) {
       } catch {}
 
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          showAlert("Location permission required", "Enable location in settings.", [{ text: "OK" }], "warning");
-          return;
-        }
+       const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+if (fgStatus !== "granted") {
+  showAlert("Location permission required", "Enable location in settings.", [{ text: "OK" }], "warning");
+  return;
+}
+
+// ✅ Must request background separately on Android
+const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+if (bgStatus !== "granted") {
+  console.warn("Background location denied — geofencing won't work when app is minimized");
+}
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
         const initial = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setCurrentLocation(initial);
